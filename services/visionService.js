@@ -1,46 +1,34 @@
 const Tesseract = require('tesseract.js');
-const pdf = require('pdf-poppler');
 const fs = require('fs');
 const path = require('path');
 
 const detectText = async (filePath) => {
     try {
-        let imageToProcess = filePath;
-        const isPdf = filePath.toLowerCase().endsWith('.pdf');
+        const lower = filePath.toLowerCase();
+        const isPdf = lower.endsWith('.pdf');
+        const isImage = ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp', '.gif'].some(ext => lower.endsWith(ext));
 
         if (isPdf) {
-            console.log("Conversion PDF en Image (Poppler)...");
-            
-            let opts = {
-                format: 'jpeg',
-                out_dir: path.dirname(filePath),
-                out_prefix: path.basename(filePath, path.extname(filePath)),
-                page: 1
-            };
-
-            // Convertit la page 1 en image
-            await pdf.convert(filePath, opts);
-            
-            // Le fichier créé par poppler s'appellera nom-1.jpg
-            imageToProcess = path.join(opts.out_dir, `${opts.out_prefix}-1.jpg`);
+            // PDFs are not handled for now — caller should provide an image
+            throw new Error('PDF handling is disabled for now. Please provide an image file (jpg, png, etc.).');
         }
 
-        console.log("OCR local en cours sur :", imageToProcess);
+        if (!isImage) {
+            throw new Error('Unsupported file type. Please provide an image file (jpg, png, etc.).');
+        }
+
+        console.log('OCR local en cours sur :', filePath);
         const { data: { text } } = await Tesseract.recognize(
-            imageToProcess,
+            filePath,
             'fra',
             { logger: m => console.log(`${m.status} : ${Math.round(m.progress * 100)}%`) }
         );
 
-        // Nettoyage de l'image temporaire si c'était un PDF
-        if (isPdf && fs.existsSync(imageToProcess)) {
-            fs.unlinkSync(imageToProcess);
-        }
-
         return text;
     } catch (error) {
-        console.error("Erreur OCR Local:", error);
-        throw new Error("Échec de la transcription.");
+        console.error('Erreur OCR Local:', error);
+        // Propagate original message for clearer client feedback
+        throw new Error(error.message || 'Échec de la transcription.');
     }
 };
 
