@@ -14,10 +14,6 @@ exports.processAll = async (req, res) => {
 
         for (let i = 0; i < req.files.length; i++) {
             const file = req.files[i];
-            const lowerName = (file.originalname || '').toLowerCase();
-            if (lowerName.endsWith('.pdf')) {
-                return res.status(400).json({ error: 'PDF handling is disabled for now. Please upload image files (jpg, png, ...).' });
-            }
 
             // OCR local (images only)
             const textBrut = await visionService.detectText(file.path);

@@ -11,8 +11,8 @@ const correctCopies = async (transcribedData) => {
                 {
                     role: 'user',
                     content: `Tu es un correcteur d'examen. Voici les textes extraits : ${JSON.stringify(transcribedData)}. 
-                    Réponds UNIQUEMENT avec un JSON valide :
-                    {"resultat": {"copie_1": {"note_totale": 15, "questions": [{"num": 1, "point": 5, "commentaire": "Bien"}]}}}`
+                    Réponds UNIQUEMENT avec un JSON valide, le numero de la copie etant le le numero specifie de la copie met XXXX si il y'en a pas, en suivant le template suivant :
+                    {"resultat": {"copie_numerocopie": {"note_totale": total_des_points, "questions": [{"num": numero_de_la_question, "point": nombre_de_points, "commentaire": "commentaire sur la question"}]}}}`
                 }
             ],
             responseFormat: { type: 'json_object' } // Force le format JSON
