@@ -14,8 +14,11 @@ const sendInvitation = async (req, res) => {
         await mailService.sendInvitationEmail(email, teamName || 'Equipe SAJE', contextName || 'Collaboration', inviteLink);
         res.status(200).json({ success: true, message: 'Email envoyé avec succès.' });
     } catch (error) {
-        console.error('Erreur controller mail:', error);
-        res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'email.' });
+        console.error('Erreur détaillée mail:', error);
+        res.status(500).json({ 
+            error: 'Erreur lors de l\'envoi de l\'email.',
+            details: error.message 
+        });
     }
 };
 
