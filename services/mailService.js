@@ -1,16 +1,6 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Configuration du transporteur (SMTP)
-// Ces valeurs devront être renseignées dans le fichier .env
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
-    secure: process.env.SMTP_SECURE === 'true', // true pour le port 465, false pour les autres
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * Envoie un mail d'invitation à rejoindre une équipe ou un examen
@@ -70,16 +60,22 @@ const sendInvitationEmail = async (to, teamName, contextName, inviteLink) => {
     `;
 
     try {
-        const info = await transporter.sendMail({
-            from: `"SAJE Collaboration" <${process.env.SMTP_USER}>`,
-            to: to,
+        const { data, error } = await resend.emails.send({
+            from: 'SAJE <onboarding@resend.dev>',
+            to: [to],
             subject: `Invitation : Rejoignez ${teamName} sur SAJE`,
             html: htmlContent,
         });
-        console.log('Message sent: %s', info.messageId);
-        return { success: true, messageId: info.messageId };
+
+        if (error) {
+            console.error('Resend error:', error);
+            throw new Error(error.message);
+        }
+
+        console.log('Email sent successfully via Resend:', data.id);
+        return { success: true, messageId: data.id };
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error sending email with Resend:', error);
         throw error;
     }
 };
