@@ -1,8 +1,8 @@
-const SibApiV3Sdk = require('@getbrevo/brevo');
+const { BrevoClient } = require('@getbrevo/brevo');
 
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-const apiKey = apiInstance.authentications['apiKey'];
-apiKey.apiKey = process.env.BREVO_API_KEY;
+const brevo = new BrevoClient({
+    apiKey: process.env.BREVO_API_KEY,
+});
 
 /**
  * Envoie un mail d'invitation à rejoindre une équipe ou un examen
@@ -61,14 +61,14 @@ const sendInvitationEmail = async (to, teamName, contextName, inviteLink) => {
     </html>
     `;
 
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.subject = `Invitation : Rejoignez ${teamName} sur SAJE`;
-    sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = { "name": "SAJE", "email": "contact@saje-exams.com" };
-    sendSmtpEmail.to = [{ "email": to }];
-
     try {
-        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+        const data = await brevo.transactionalEmails.sendTransacEmail({
+            subject: `Invitation : Rejoignez ${teamName} sur SAJE`,
+            htmlContent: htmlContent,
+            sender: { "name": "SAJE", "email": "contact@saje-exams.com" },
+            to: [{ "email": to }]
+        });
+        
         console.log('Email sent successfully via Brevo:', data.messageId);
         return { success: true, messageId: data.messageId };
     } catch (error) {
