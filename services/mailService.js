@@ -1,8 +1,13 @@
-const { BrevoClient } = require('@getbrevo/brevo');
+const nodemailer = require("nodemailer");
+const { MailtrapTransport } = require("mailtrap");
 
-const brevo = new BrevoClient({
-    apiKey: process.env.BREVO_API_KEY,
-});
+const transport = nodemailer.createTransport(
+    MailtrapTransport({
+        token: process.env.MAILTRAP_TOKEN,
+        sandbox: true,
+        testInboxId: parseInt(process.env.MAILTRAP_INBOX_ID, 10),
+    })
+);
 
 /**
  * Envoie un mail d'invitation à rejoindre une équipe ou un examen
@@ -62,17 +67,18 @@ const sendInvitationEmail = async (to, teamName, contextName, inviteLink) => {
     `;
 
     try {
-        const data = await brevo.transactionalEmails.sendTransacEmail({
+        await transport.sendMail({
+            from: { address: "contact@saje-exams.com", name: "SAJE" },
+            to: [to],
             subject: `Invitation : Rejoignez ${teamName} sur SAJE`,
-            htmlContent: htmlContent,
-            sender: { "name": "SAJE", "email": "contact@saje-exams.com" },
-            to: [{ "email": to }]
+            html: htmlContent,
+            category: "Invitation",
         });
         
-        console.log('Email sent successfully via Brevo:', data.messageId);
-        return { success: true, messageId: data.messageId };
+        console.log('Email sent successfully via Mailtrap');
+        return { success: true };
     } catch (error) {
-        console.error('Error sending email with Brevo:', error);
+        console.error('Error sending email with Mailtrap:', error);
         throw error;
     }
 };
